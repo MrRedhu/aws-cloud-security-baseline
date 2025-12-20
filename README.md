@@ -31,3 +31,17 @@ flowchart TB
 
   S3 --> Vault[(Hardened Storage: encryption + versioning + block public access)]
 ```
+
+---
+
+## Repo navigation
+- Environment + guardrails: `evidence/00-environment.md`
+- Architecture diagram source: `diagrams/architecture.mmd`
+- Incident runbook (template): `runbooks/guardduty-triage.md`
+
+## Evidence workflow (how this repo will be "proven")
+As I build the baseline, I will capture before/after evidence in:
+- IAM: `evidence/01-iam-before-after.md`
+- Logging: `evidence/02-logging-before-after.md`
+- Detection: `evidence/03-detection-findings.md`
+- Remediations: `evidence/04-06-remediation-*.md`

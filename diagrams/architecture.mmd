@@ -1,17 +1,19 @@
 flowchart TB
-  Admin[Admin Persona] --> IAM[(IAM Roles & Policies)]
-  Dev[Developer Persona] --> IAM
-  RO[Read-only Persona] --> IAM
+  subgraph Identity["Identity & Access (Least Privilege)"]
+    Admin[Admin Persona] --> AR[(Admin Role)]
+    Dev[Developer Persona] --> DR[(Developer Role)]
+    RO[Read-only Persona] --> RR[(ReadOnly Role)]
+  end
 
-  subgraph Logging
-    CT[CloudTrail] --> CWL[CloudWatch Logs]
+  subgraph Logging["Logging (Centralized + Retention + Hardened Storage)"]
+    CT[CloudTrail] --> CWL[CloudWatch Logs\n(retention set)]
     VPC[VPC Flow Logs] --> CWL
-    CWL --> S3[(Central Log Bucket)]
+    CT --> S3[(Central Log Bucket)]
+    CWL --> S3
+    S3 --> Hardened[Hardened Storage\nBlock Public Access + Encryption + Versioning]
   end
 
-  subgraph Detection
+  subgraph Detection["Detection (Signals + Findings)"]
     GD[GuardDuty] --> SH[Security Hub]
-    SH --> Findings[(Findings)]
+    SH --> Findings[Findings\n(JSON + screenshots as evidence)]
   end
-
-  S3 --> Vault[(Hardened Storage)]
