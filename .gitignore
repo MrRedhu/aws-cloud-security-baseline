@@ -1,0 +1,20 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Local env
+.env
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs / outputs
+*.log
+
+# Evidence exports (optional; keep if you want them versioned)
+# evidence/raw/

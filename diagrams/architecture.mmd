@@ -1,0 +1,17 @@
+flowchart TB
+  Admin[Admin Persona] --> IAM[(IAM Roles & Policies)]
+  Dev[Developer Persona] --> IAM
+  RO[Read-only Persona] --> IAM
+
+  subgraph Logging
+    CT[CloudTrail] --> CWL[CloudWatch Logs]
+    VPC[VPC Flow Logs] --> CWL
+    CWL --> S3[(Central Log Bucket)]
+  end
+
+  subgraph Detection
+    GD[GuardDuty] --> SH[Security Hub]
+    SH --> Findings[(Findings)]
+  end
+
+  S3 --> Vault[(Hardened Storage)]
