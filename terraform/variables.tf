@@ -16,9 +16,14 @@ variable "owner" {
   default     = "emerson"
 }
 
-# Optional: if you want to prefix resource names for uniqueness
 variable "name_prefix" {
   description = "Prefix for resource names"
   type        = string
   default     = "acs-baseline"
+}
+
+variable "cw_log_retention_days" {
+  description = "CloudWatch Logs retention in days"
+  type        = number
+  default     = 30
 }
