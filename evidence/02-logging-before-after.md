@@ -8,7 +8,7 @@ Prove that logging is:
 - Hardened (S3 Block Public Access + encryption + versioning)
 
 ## S3 Log Archive Bucket (hardened storage)
-`aws s3api get-public-access-block --bucket acs-baseline-176087999560-log-archive`
+`aws s3api get-public-access-block --bucket acs-baseline-176087999560-log-archive --no-cli-pager`
 ```json
 {
     "PublicAccessBlockConfiguration": {
@@ -20,7 +20,7 @@ Prove that logging is:
 }
 ```
 
-`aws s3api get-bucket-encryption --bucket acs-baseline-176087999560-log-archive`
+`aws s3api get-bucket-encryption --bucket acs-baseline-176087999560-log-archive --no-cli-pager`
 ```json
 {
     "ServerSideEncryptionConfiguration": {
@@ -36,14 +36,14 @@ Prove that logging is:
 }
 ```
 
-`aws s3api get-bucket-versioning --bucket acs-baseline-176087999560-log-archive`
+`aws s3api get-bucket-versioning --bucket acs-baseline-176087999560-log-archive --no-cli-pager`
 ```json
 {
     "Status": "Enabled"
 }
 ```
 
-`aws s3api get-bucket-policy --bucket acs-baseline-176087999560-log-archive`
+`aws s3api get-bucket-policy --bucket acs-baseline-176087999560-log-archive --no-cli-pager`
 ```json
 {
     "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AWSCloudTrailAclCheck\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudtrail.amazonaws.com\"},\"Action\":\"s3:GetBucketAcl\",\"Resource\":\"arn:aws:s3:::acs-baseline-176087999560-log-archive\"},{\"Sid\":\"AWSCloudTrailWrite\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudtrail.amazonaws.com\"},\"Action\":\"s3:PutObject\",\"Resource\":\"arn:aws:s3:::acs-baseline-176087999560-log-archive/AWSLogs/176087999560/*\",\"Condition\":{\"StringEquals\":{\"s3:x-amz-acl\":\"bucket-owner-full-control\"}}}]}"
@@ -51,7 +51,23 @@ Prove that logging is:
 ```
 
 ## CloudTrail (API activity logging)
-`aws cloudtrail describe-trails`
+`aws cloudtrail get-trail-status --name acs-baseline-trail --no-cli-pager`
+```json
+{
+    "IsLogging": true,
+    "LatestDeliveryTime": "2025-12-20T17:54:13.137000-07:00",
+    "StartLoggingTime": "2025-12-20T17:50:43.963000-07:00",
+    "LatestCloudWatchLogsDeliveryTime": "2025-12-20T17:56:04.677000-07:00",
+    "LatestDeliveryAttemptTime": "2025-12-21T00:54:13Z",
+    "LatestNotificationAttemptTime": "",
+    "LatestNotificationAttemptSucceeded": "",
+    "LatestDeliveryAttemptSucceeded": "2025-12-21T00:54:13Z",
+    "TimeLoggingStarted": "2025-12-21T00:50:43Z",
+    "TimeLoggingStopped": ""
+}
+```
+
+`aws cloudtrail describe-trails --no-cli-pager`
 ```json
 {
     "trailList": [
@@ -73,41 +89,8 @@ Prove that logging is:
 }
 ```
 
-`aws cloudtrail get-trail-status --name acs-baseline-trail`
-```json
-{
-    "IsLogging": true,
-    "StartLoggingTime": "2025-12-20T17:50:43.963000-07:00",
-    "LatestDeliveryAttemptTime": "",
-    "LatestNotificationAttemptTime": "",
-    "LatestNotificationAttemptSucceeded": "",
-    "LatestDeliveryAttemptSucceeded": "",
-    "TimeLoggingStarted": "2025-12-21T00:50:43Z",
-    "TimeLoggingStopped": ""
-}
-```
-
-`aws logs describe-log-groups --log-group-name-prefix /aws/cloudtrail/`
-```json
-{
-    "logGroups": [
-        {
-            "logGroupName": "/aws/cloudtrail/acs-baseline",
-            "creationTime": 1766278231894,
-            "retentionInDays": 30,
-            "metricFilterCount": 0,
-            "arn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/cloudtrail/acs-baseline:*",
-            "storedBytes": 0,
-            "logGroupClass": "STANDARD",
-            "logGroupArn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/cloudtrail/acs-baseline",
-            "deletionProtectionEnabled": false
-        }
-    ]
-}
-```
-
 ## VPC Flow Logs (network visibility)
-`aws ec2 describe-flow-logs`
+`aws ec2 describe-flow-logs --no-cli-pager`
 ```json
 {
     "FlowLogs": [
@@ -143,77 +126,31 @@ Prove that logging is:
 }
 ```
 
-`aws logs describe-log-groups --log-group-name-prefix /aws/vpc/flowlogs/`
-```json
-{
-    "logGroups": [
-        {
-            "logGroupName": "/aws/vpc/flowlogs/acs-baseline",
-            "creationTime": 1766278231910,
-            "retentionInDays": 30,
-            "metricFilterCount": 0,
-            "arn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/vpc/flowlogs/acs-baseline:*",
-            "storedBytes": 0,
-            "logGroupClass": "STANDARD",
-            "logGroupArn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/vpc/flowlogs/acs-baseline",
-            "deletionProtectionEnabled": false
-        }
-    ]
-}
+## Retention (CloudWatch Logs)
+`aws logs describe-log-groups --log-group-name-prefix "/aws/cloudtrail/acs-baseline" --query "logGroups[].{name:logGroupName,retention:retentionInDays}" --output table --no-cli-pager`
+```
+-----------------------------------------------
+|              DescribeLogGroups              |
++-------------------------------+-------------+
+|             name              |  retention  |
++-------------------------------+-------------+
+|  /aws/cloudtrail/acs-baseline |  30         |
++-------------------------------+-------------+
 ```
 
-## Retention (CloudWatch Logs)
-`aws logs describe-log-groups --log-group-name-prefix /aws/`
-```json
-{
-    "logGroups": [
-        {
-            "logGroupName": "/aws/cloudtrail/acs-baseline",
-            "creationTime": 1766278231894,
-            "retentionInDays": 30,
-            "metricFilterCount": 0,
-            "arn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/cloudtrail/acs-baseline:*",
-            "storedBytes": 0,
-            "logGroupClass": "STANDARD",
-            "logGroupArn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/cloudtrail/acs-baseline",
-            "deletionProtectionEnabled": false
-        },
-        {
-            "logGroupName": "/aws/lambda/face-detection",
-            "creationTime": 1763164356149,
-            "metricFilterCount": 0,
-            "arn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/lambda/face-detection:*",
-            "storedBytes": 1016904,
-            "logGroupClass": "STANDARD",
-            "logGroupArn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/lambda/face-detection",
-            "deletionProtectionEnabled": false
-        },
-        {
-            "logGroupName": "/aws/lambda/face-recognition",
-            "creationTime": 1763168382217,
-            "metricFilterCount": 0,
-            "arn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/lambda/face-recognition:*",
-            "storedBytes": 3282476,
-            "logGroupClass": "STANDARD",
-            "logGroupArn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/lambda/face-recognition",
-            "deletionProtectionEnabled": false
-        },
-        {
-            "logGroupName": "/aws/vpc/flowlogs/acs-baseline",
-            "creationTime": 1766278231910,
-            "retentionInDays": 30,
-            "metricFilterCount": 0,
-            "arn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/vpc/flowlogs/acs-baseline:*",
-            "storedBytes": 0,
-            "logGroupClass": "STANDARD",
-            "logGroupArn": "arn:aws:logs:us-east-1:176087999560:log-group:/aws/vpc/flowlogs/acs-baseline",
-            "deletionProtectionEnabled": false
-        }
-    ]
-}
+`aws logs describe-log-groups --log-group-name-prefix "/aws/vpc/flowlogs/acs-baseline" --query "logGroups[].{name:logGroupName,retention:retentionInDays}" --output table --no-cli-pager`
 ```
+-------------------------------------------------
+|               DescribeLogGroups               |
++---------------------------------+-------------+
+|              name               |  retention  |
++---------------------------------+-------------+
+|  /aws/vpc/flowlogs/acs-baseline |  30         |
++---------------------------------+-------------+
+```
+
+Retention evidence is filtered to baseline log groups (/aws/cloudtrail/acs-baseline and /aws/vpc/flowlogs/acs-baseline) to avoid unrelated pre-existing log groups in the account.
 
 ## Notes
 - CloudTrail also writes to S3 under `AWSLogs/176087999560/`.
-- This output includes unrelated log groups that pre-existed in the account and may not have retention configured.
 - Findings and incident response will rely on these logs in later steps.
