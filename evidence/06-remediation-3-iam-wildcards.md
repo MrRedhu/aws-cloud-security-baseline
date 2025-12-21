@@ -45,6 +45,10 @@ Wildcard IAM permissions (Action="*" / Resource="*") create privilege escalation
 ## Remediation
 Detach the wildcard policy and attach the least-privilege policy.
 
+## Change (diff)
+- Attached policy: acs-baseline-dev-bad-wildcard
++ Attached policy: acs-baseline-dev-fixed
+
 ## AFTER evidence
 `aws iam list-attached-role-policies --role-name acs-baseline-demo-bad-iam --no-cli-pager`
 ```json

@@ -178,6 +178,10 @@ Inbound SSH (TCP/22) was open to 0.0.0.0/0, increasing exposure and brute-force 
 ## Remediation
 Removed inbound rule allowing 0.0.0.0/0 on port 22.
 
+## Change (diff)
+- Inbound: tcp/22 from 0.0.0.0/0
++ Inbound: none
+
 ## AFTER evidence
 `aws ec2 describe-security-groups --group-ids sg-02b31fdeef63dde30 --no-cli-pager`
 ```json

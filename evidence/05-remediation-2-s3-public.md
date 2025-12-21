@@ -49,6 +49,12 @@ Control evaluation can take several minutes; this demo validates risk + fix via 
 - Enabled Block Public Access at the bucket level
 - Removed the public bucket policy
 
+## Change (diff)
+- BlockPublicAcls/IgnorePublicAcls/BlockPublicPolicy/RestrictPublicBuckets: false
++ BlockPublicAcls/IgnorePublicAcls/BlockPublicPolicy/RestrictPublicBuckets: true
+- Public bucket policy: Allow s3:GetObject to "*"
++ Bucket policy removed
+
 ## AFTER evidence
 `aws s3api get-public-access-block --bucket acs-baseline-demo-public-176087999560 --region us-east-1 --no-cli-pager`
 ```json
