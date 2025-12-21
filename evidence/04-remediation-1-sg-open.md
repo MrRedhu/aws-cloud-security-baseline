@@ -213,6 +213,12 @@ Removed inbound rule allowing 0.0.0.0/0 on port 22.
 }
 ```
 
+## Cleanup recheck
+`aws ec2 describe-security-groups --group-ids sg-02b31fdeef63dde30 --no-cli-pager`
+```
+An error occurred (InvalidGroup.NotFound) when calling the DescribeSecurityGroups operation: The security group 'sg-02b31fdeef63dde30' does not exist
+```
+
 ## Prevention
 - Use least-privilege SG rules (restrict by CIDR/VPN/bastion)
 - Keep Security Hub FSBP enabled to detect regressions

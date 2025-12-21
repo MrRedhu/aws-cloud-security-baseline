@@ -79,6 +79,12 @@ An error occurred (NoSuchBucketPolicy) when calling the GetBucketPolicyStatus op
 An error occurred (404) when calling the HeadBucket operation: Not Found
 ```
 
+## Cleanup recheck
+`aws s3api head-bucket --bucket acs-baseline-demo-public-176087999560 --region us-east-1 --no-cli-pager`
+```
+An error occurred (404) when calling the HeadBucket operation: Not Found
+```
+
 ## Prevention
 - Enforce Block Public Access by default for new buckets
 - Periodic Security Hub checks + alerts
