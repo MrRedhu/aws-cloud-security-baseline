@@ -1,5 +1,100 @@
 # Remediation 1 - EC2 Security Group open to the world (SSH)
 
+## Reproduce (safe demo)
+This demo creates a temporary security group in the baseline VPC, opens SSH (22) to the world, then remediates by removing the rule and deleting the security group.
+
+### 1) Simulate misconfiguration (open SSH)
+```powershell
+$env:AWS_PAGER=""
+$REGION="us-east-1"
+
+cd terraform
+$VPC_ID = terraform output -raw flowlogs_vpc_id
+cd ..
+
+$ACCOUNT_ID = aws sts get-caller-identity --query Account --output text --no-cli-pager
+$NAME = "acs-baseline-demo-open-ssh-$((Get-Date).ToString('yyyyMMddHHmmss'))"
+
+$SG_ID = aws ec2 create-security-group `
+  --group-name $NAME `
+  --description "Demo misconfig to generate Security Hub control finding (temporary)" `
+  --vpc-id $VPC_ID `
+  --query GroupId `
+  --output text `
+  --region $REGION `
+  --no-cli-pager
+
+aws ec2 authorize-security-group-ingress `
+  --group-id $SG_ID `
+  --protocol tcp `
+  --port 22 `
+  --cidr 0.0.0.0/0 `
+  --region $REGION `
+  --no-cli-pager
+
+$SG_ARN = "arn:aws:ec2:$REGION:$ACCOUNT_ID:security-group/$SG_ID"
+```
+
+### 2) Verify-before (proof)
+```powershell
+aws ec2 describe-security-groups --group-ids $SG_ID --region $REGION --no-cli-pager
+
+# Security Hub controls can take a few minutes to evaluate.
+@"
+{
+  "ResourceId": [
+    { "Value": "$SG_ARN", "Comparison": "EQUALS" }
+  ],
+  "ComplianceStatus": [
+    { "Value": "FAILED", "Comparison": "EQUALS" }
+  ]
+}
+"@ | Out-File -Encoding ascii -FilePath .\filters-sg-ec2-18.json
+
+aws securityhub get-findings `
+  --filters file://filters-sg-ec2-18.json `
+  --max-results 10 `
+  --region $REGION `
+  --no-cli-pager
+```
+
+### 3) Fix (remove open ingress)
+```powershell
+aws ec2 revoke-security-group-ingress `
+  --group-id $SG_ID `
+  --protocol tcp `
+  --port 22 `
+  --cidr 0.0.0.0/0 `
+  --region $REGION `
+  --no-cli-pager
+```
+
+### 4) Verify-after (proof) + cleanup
+```powershell
+aws ec2 describe-security-groups --group-ids $SG_ID --region $REGION --no-cli-pager
+
+# Optional: re-check once the control re-evaluates (may take time).
+@"
+{
+  "ResourceId": [
+    { "Value": "$SG_ARN", "Comparison": "EQUALS" }
+  ],
+  "ComplianceStatus": [
+    { "Value": "PASSED", "Comparison": "EQUALS" }
+  ]
+}
+"@ | Out-File -Encoding ascii -FilePath .\filters-sg-ec2-18-passed.json
+
+aws securityhub get-findings `
+  --filters file://filters-sg-ec2-18-passed.json `
+  --max-results 10 `
+  --region $REGION `
+  --no-cli-pager
+
+aws ec2 delete-security-group --group-id $SG_ID --region $REGION --no-cli-pager
+aws ec2 describe-security-groups --group-ids $SG_ID --region $REGION --no-cli-pager
+```
+
 ## Issue
 Inbound SSH (TCP/22) was open to 0.0.0.0/0, increasing exposure and brute-force risk.
 

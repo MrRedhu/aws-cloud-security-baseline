@@ -1,5 +1,69 @@
 # Remediation 3 - IAM overly permissive wildcard policy
 
+## Reproduce (safe demo)
+This demo attaches an intentionally bad wildcard policy to a temporary role, then remediates by replacing it with the baseline least-privilege policy and deleting the role.
+
+### 1) Simulate misconfiguration (attach wildcard policy to demo role)
+```powershell
+$env:AWS_PAGER=""
+
+cd terraform
+$FIXED_POLICY_ARN = terraform output -raw fixed_policy_arn
+$BAD_POLICY_ARN = terraform output -raw bad_policy_arn
+cd ..
+
+# If bad_policy_arn is empty/null, enable the demo-only policy and apply:
+#   cd terraform
+#   terraform apply -var="create_bad_policy_example=true"
+#   terraform output -raw bad_policy_arn
+
+$ROLE="acs-baseline-demo-bad-iam-$((Get-Date).ToString('yyyyMMddHHmmss'))"
+
+$ACCOUNT_ID = aws sts get-caller-identity --query Account --output text --no-cli-pager
+
+@"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::$ACCOUNT_ID:root" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+"@ | Out-File -Encoding ascii -FilePath .\\trust-demo-role.json
+
+aws iam create-role `
+  --role-name $ROLE `
+  --assume-role-policy-document file://trust-demo-role.json `
+  --no-cli-pager
+
+aws iam attach-role-policy --role-name $ROLE --policy-arn $BAD_POLICY_ARN --no-cli-pager
+```
+
+### 2) Verify-before (proof)
+```powershell
+aws iam list-attached-role-policies --role-name $ROLE --no-cli-pager
+aws iam get-policy-version --policy-arn $BAD_POLICY_ARN --version-id v1 --no-cli-pager
+```
+
+### 3) Fix (replace wildcard with least-privilege policy)
+```powershell
+aws iam detach-role-policy --role-name $ROLE --policy-arn $BAD_POLICY_ARN --no-cli-pager
+aws iam attach-role-policy --role-name $ROLE --policy-arn $FIXED_POLICY_ARN --no-cli-pager
+```
+
+### 4) Verify-after (proof) + cleanup
+```powershell
+aws iam list-attached-role-policies --role-name $ROLE --no-cli-pager
+aws iam get-policy-version --policy-arn $FIXED_POLICY_ARN --version-id v1 --no-cli-pager
+
+aws iam detach-role-policy --role-name $ROLE --policy-arn $FIXED_POLICY_ARN --no-cli-pager
+aws iam delete-role --role-name $ROLE --no-cli-pager
+aws iam get-role --role-name $ROLE --no-cli-pager
+```
+
 ## Issue
 Wildcard IAM permissions (Action="*" / Resource="*") create privilege escalation risk and violate least privilege.
 

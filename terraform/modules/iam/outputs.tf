@@ -11,7 +11,7 @@ output "readonly_role_arn" {
 }
 
 output "bad_policy_arn" {
-  value = aws_iam_policy.bad_wildcard.arn
+  value = try(aws_iam_policy.bad_wildcard[0].arn, null)
 }
 
 output "fixed_policy_arn" {

@@ -40,6 +40,8 @@ resource "aws_iam_role" "developer" {
 
 # --- BAD POLICY (for before/after evidence) ---
 resource "aws_iam_policy" "bad_wildcard" {
+  count = var.create_bad_policy_example ? 1 : 0
+
   name        = "${var.name_prefix}-dev-bad-wildcard"
   description = "Intentionally bad policy for portfolio evidence: allow * on * (do not keep attached)."
 
@@ -107,8 +109,8 @@ resource "aws_iam_policy" "fixed_dev" {
 }
 
 # ATTACHMENT SWITCH:
-# Start with the BAD policy attached to capture "before" evidence, then switch to FIXED and capture "after".
-# For now we attach BAD to make the "before" easy to collect.
+# The baseline attaches the FIXED policy by default.
+# The BAD policy is created only when var.create_bad_policy_example is enabled (demo-only; do not attach in real environments).
 resource "aws_iam_role_policy_attachment" "dev_policy_attach" {
   role       = aws_iam_role.developer.name
   policy_arn = aws_iam_policy.fixed_dev.arn

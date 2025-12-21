@@ -220,6 +220,14 @@ Prove that:
 }
 ```
 
+### AWS Config archive bucket (optional hardening proof)
+Re-run and paste:
+- `aws s3api get-public-access-block --bucket <CONFIG_BUCKET> --no-cli-pager`
+- `aws s3api get-bucket-encryption --bucket <CONFIG_BUCKET> --no-cli-pager`
+- `aws s3api get-bucket-versioning --bucket <CONFIG_BUCKET> --no-cli-pager`
+- `aws s3api get-bucket-ownership-controls --bucket <CONFIG_BUCKET> --no-cli-pager`
+- `aws s3api get-bucket-policy --bucket <CONFIG_BUCKET> --no-cli-pager`
+
 `aws securityhub get-enabled-standards --query "StandardsSubscriptions[].{Arn:StandardsArn,Status:StandardsStatus,Reason:StandardsStatusReason.StatusReasonCode}" --output table --no-cli-pager`
 ```
 ---------------------------------------------------------------------------------------------------------

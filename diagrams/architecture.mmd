@@ -1,19 +1,23 @@
 flowchart TB
-  subgraph Identity["Identity & Access"]
-    Admin["Admin persona"] --> AR["Admin role"]
-    Dev["Developer persona"] --> DR["Developer role"]
-    RO["Read-only persona"] --> RR["ReadOnly role"]
+  subgraph Identity["Identity & Access (IAM Personas)"]
+    Admin["Admin role"] --> API["AWS API activity"]
+    Dev["Developer role"] --> API
+    RO["Read-only role"] --> API
   end
 
-  subgraph Logging["Logging & Storage"]
-    CT["CloudTrail"] --> CWL["CloudWatch Logs (retention)"]
-    VPC["VPC Flow Logs"] --> CWL
-    CT --> S3["Central log bucket (S3)"]
-    CWL --> S3
-    S3 --> Hardened["Hardened storage: BPA + encryption + versioning"]
+  subgraph Logging["Logging (Centralized + Retention + Hardened Storage)"]
+    API --> CT["CloudTrail (multi-region)"]
+    CT --> CTLG["CloudWatch Logs (retention): /aws/cloudtrail/acs-baseline"]
+    CT --> S3["S3 log archive (hardened)"]
+    VPC["Flow Logs VPC"] --> FL["VPC Flow Logs"]
+    FL --> FLLG["CloudWatch Logs (retention): /aws/vpc/flowlogs/acs-baseline"]
+    S3 --> Hardened["S3 hardening: BPA + encryption + versioning"]
   end
 
-  subgraph Detection["Detection & Findings"]
-    GD["GuardDuty"] --> SH["Security Hub"]
+  subgraph Detection["Detection (Signals + Controls + Findings)"]
+    CT --> GD["GuardDuty (signals)"]
+    FL --> GD
+    CFG["AWS Config (recorder)"] --> SH["Security Hub (controls + findings)"]
+    GD --> SH
     SH --> Findings["Findings + evidence artifacts"]
   end

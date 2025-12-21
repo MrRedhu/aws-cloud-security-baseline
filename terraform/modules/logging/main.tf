@@ -5,13 +5,22 @@ locals {
   # S3 bucket names must be globally unique + lowercase
   log_bucket_name = lower("${var.name_prefix}-${data.aws_caller_identity.current.account_id}-log-archive")
   cloudtrail_name = "${var.name_prefix}-trail"
+  cloudtrail_arn  = "arn:aws:cloudtrail:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:trail/${local.cloudtrail_name}"
 }
 
 # -----------------------------
 # S3: Central hardened log archive bucket
 # -----------------------------
 resource "aws_s3_bucket" "log_archive" {
-  bucket = local.log_bucket_name
+  bucket        = local.log_bucket_name
+  force_destroy = var.force_destroy_buckets
+}
+
+resource "aws_s3_bucket_ownership_controls" "log_archive" {
+  bucket = aws_s3_bucket.log_archive.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "log_archive" {
@@ -51,15 +60,38 @@ resource "aws_s3_bucket_policy" "cloudtrail_write" {
         Principal = { Service = "cloudtrail.amazonaws.com" },
         Action    = "s3:GetBucketAcl",
         Resource  = aws_s3_bucket.log_archive.arn
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn"     = local.cloudtrail_arn,
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
       },
       {
         Sid       = "AWSCloudTrailWrite",
         Effect    = "Allow",
         Principal = { Service = "cloudtrail.amazonaws.com" },
         Action    = "s3:PutObject",
-        Resource  = "${aws_s3_bucket.log_archive.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        Resource  = "${aws_s3_bucket.log_archive.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
-          StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" }
+          StringEquals = {
+            "s3:x-amz-acl"      = "bucket-owner-full-control",
+            "aws:SourceArn"     = local.cloudtrail_arn,
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid       = "DenyInsecureTransport",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
+        Resource = [
+          aws_s3_bucket.log_archive.arn,
+          "${aws_s3_bucket.log_archive.arn}/*"
+        ],
+        Condition = {
+          Bool = { "aws:SecureTransport" = "false" }
         }
       }
     ]

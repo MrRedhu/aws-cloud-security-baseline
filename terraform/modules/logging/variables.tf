@@ -8,3 +8,9 @@ variable "cw_log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "force_destroy_buckets" {
+  description = "If true, allow Terraform to delete the log archive bucket even if it contains objects (sandbox teardown helper)."
+  type        = bool
+  default     = false
+}

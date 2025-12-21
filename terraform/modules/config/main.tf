@@ -1,7 +1,10 @@
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 locals {
-  config_bucket_name = lower("${var.name_prefix}-${data.aws_caller_identity.current.account_id}-config-archive")
+  config_bucket_name           = lower("${var.name_prefix}-${data.aws_caller_identity.current.account_id}-config-archive")
+  config_delivery_channel_name = "${var.name_prefix}-config-delivery"
+  config_delivery_channel_arn  = "arn:aws:config:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:delivery-channel/${local.config_delivery_channel_name}"
 }
 
 # Service-linked role for AWS Config
@@ -11,7 +14,15 @@ resource "aws_iam_service_linked_role" "config" {
 
 # Dedicated S3 bucket for AWS Config snapshots/history (hardened)
 resource "aws_s3_bucket" "config_archive" {
-  bucket = local.config_bucket_name
+  bucket        = local.config_bucket_name
+  force_destroy = var.force_destroy_buckets
+}
+
+resource "aws_s3_bucket_ownership_controls" "config_archive" {
+  bucket = aws_s3_bucket.config_archive.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "config_archive" {
@@ -47,15 +58,38 @@ resource "aws_s3_bucket_policy" "config_write" {
         Principal = { Service = "config.amazonaws.com" },
         Action    = "s3:GetBucketAcl",
         Resource  = aws_s3_bucket.config_archive.arn
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn"     = local.config_delivery_channel_arn,
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
       },
       {
         Sid       = "AWSConfigBucketDelivery",
         Effect    = "Allow",
         Principal = { Service = "config.amazonaws.com" },
         Action    = "s3:PutObject",
-        Resource  = "${aws_s3_bucket.config_archive.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/Config/*",
+        Resource  = "${aws_s3_bucket.config_archive.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/Config/*"
         Condition = {
-          StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" }
+          StringEquals = {
+            "s3:x-amz-acl"      = "bucket-owner-full-control",
+            "aws:SourceArn"     = local.config_delivery_channel_arn,
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid       = "DenyInsecureTransport",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
+        Resource = [
+          aws_s3_bucket.config_archive.arn,
+          "${aws_s3_bucket.config_archive.arn}/*"
+        ],
+        Condition = {
+          Bool = { "aws:SecureTransport" = "false" }
         }
       }
     ]
@@ -74,7 +108,7 @@ resource "aws_config_configuration_recorder" "main" {
 }
 
 resource "aws_config_delivery_channel" "main" {
-  name           = "${var.name_prefix}-config-delivery"
+  name           = local.config_delivery_channel_name
   s3_bucket_name = aws_s3_bucket.config_archive.bucket
 
   depends_on = [

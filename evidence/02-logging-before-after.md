@@ -50,6 +50,13 @@ Prove that logging is:
 }
 ```
 
+### Additional hardening checks (re-run after next `terraform apply`)
+The Terraform baseline now also sets S3 ownership controls and tightens the bucket policy (confused-deputy protection + HTTPS-only). Re-run and paste:
+- `aws s3api get-bucket-ownership-controls --bucket <LOG_BUCKET> --no-cli-pager`
+- `aws s3api get-bucket-policy --bucket <LOG_BUCKET> --no-cli-pager` (verify `aws:SourceArn`, `aws:SourceAccount`, and `DenyInsecureTransport`)
+
+Note: ownership is set to `BucketOwnerPreferred` to remain compatible with AWS service deliveries that use the `bucket-owner-full-control` ACL header.
+
 ## CloudTrail (API activity logging)
 `aws cloudtrail get-trail-status --name acs-baseline-trail --no-cli-pager`
 ```json

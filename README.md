@@ -1,6 +1,9 @@
 # AWS Cloud Security Baseline (IAM + Logging + Detection + Remediation)
 
-A secure-by-default AWS baseline that demonstrates **least-privilege IAM**, **centralized and hardened logging**, **threat detection (GuardDuty + Security Hub)**, and **evidence-backed remediations**.  
+[![Terraform](https://github.com/MrRedhu/aws-cloud-security-baseline/actions/workflows/terraform.yml/badge.svg?branch=main)](https://github.com/MrRedhu/aws-cloud-security-baseline/actions/workflows/terraform.yml)
+![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5.0-7B42BC?logo=terraform)
+
+A secure-by-default AWS baseline that demonstrates **least-privilege IAM**, **centralized and hardened logging**, **threat detection (GuardDuty + Security Hub)**, and **evidence-backed remediations**.
 This repo is designed to be **deployable, reproducible, and auditable** - similar to what cloud security teams ship as an internal baseline.
 
 ## Why this matters
@@ -18,28 +21,33 @@ This repo is designed to be **deployable, reproducible, and auditable** - simila
 
 ```mermaid
 flowchart TB
-  subgraph Identity["Identity & Access"]
-    Admin["Admin persona"] --> AR["Admin role"]
-    Dev["Developer persona"] --> DR["Developer role"]
-    RO["Read-only persona"] --> RR["ReadOnly role"]
+  subgraph Identity["Identity & Access (IAM Personas)"]
+    Admin["Admin role"] --> API["AWS API activity"]
+    Dev["Developer role"] --> API
+    RO["Read-only role"] --> API
   end
 
-  subgraph Logging["Logging & Storage"]
-    CT["CloudTrail"] --> CWL["CloudWatch Logs (retention)"]
-    VPC["VPC Flow Logs"] --> CWL
-    CT --> S3["Central log bucket (S3)"]
-    CWL --> S3
-    S3 --> Hardened["Hardened storage: BPA + encryption + versioning"]
+  subgraph Logging["Logging (Centralized + Retention + Hardened Storage)"]
+    API --> CT["CloudTrail (multi-region)"]
+    CT --> CTLG["CloudWatch Logs (retention): /aws/cloudtrail/acs-baseline"]
+    CT --> S3["S3 log archive (hardened)"]
+    VPC["Flow Logs VPC"] --> FL["VPC Flow Logs"]
+    FL --> FLLG["CloudWatch Logs (retention): /aws/vpc/flowlogs/acs-baseline"]
+    S3 --> Hardened["S3 hardening: BPA + encryption + versioning"]
   end
 
-  subgraph Detection["Detection & Findings"]
-    GD["GuardDuty"] --> SH["Security Hub"]
+  subgraph Detection["Detection (Signals + Controls + Findings)"]
+    CT --> GD["GuardDuty (signals)"]
+    FL --> GD
+    CFG["AWS Config (recorder)"] --> SH["Security Hub (controls + findings)"]
+    GD --> SH
     SH --> Findings["Findings + evidence artifacts"]
   end
 ```
 
 ## What Gets Deployed
-- **IAM personas**: Admin / Developer / ReadOnly roles + example bad vs fixed policy
+- **IAM personas**: Admin / Developer / ReadOnly roles + least-privilege developer policy
+  - Optional demo-only wildcard policy (not attached by default): `create_bad_policy_example=true`
 - **Logging baseline**: CloudTrail (S3 + CloudWatch Logs), CloudWatch retention, hardened S3 log archive, VPC Flow Logs to CloudWatch
 - **Detection baseline**: GuardDuty + Security Hub (AWS FSBP standard)
 - **Config dependency**: AWS Config recorder + delivery channel + hardened S3 archive (required for Security Hub controls)
@@ -49,7 +57,7 @@ flowchart TB
 ## Repo navigation
 - Environment + guardrails: `evidence/00-environment.md`
 - Architecture diagram source: `diagrams/architecture.mmd`
-- Incident runbook (template): `runbooks/guardduty-triage.md`
+- Incident runbook: `runbooks/guardduty-triage.md`
 
 ## Evidence links
 - IAM: `evidence/01-iam-before-after.md`
@@ -58,12 +66,16 @@ flowchart TB
 - Remediation 1 (SG open SSH): `evidence/04-remediation-1-sg-open.md`
 - Remediation 2 (S3 public access): `evidence/05-remediation-2-s3-public.md`
 - Remediation 3 (IAM wildcard): `evidence/06-remediation-3-iam-wildcards.md`
-- Runbook: `runbooks/guardduty-triage.md`
 
-## Reproduce (deploy → simulate → remediate → destroy)
+## Reproduce (deploy -> simulate -> remediate -> destroy)
 ### Prereqs
 - Terraform `>= 1.5`
 - AWS CLI authenticated to a sandbox account (region defaults to `us-east-1`)
+
+Recommended (disable AWS CLI pager for copy/paste evidence):
+```powershell
+$env:AWS_PAGER=""
+```
 
 ### Deploy
 ```powershell
@@ -74,19 +86,38 @@ terraform output
 ```
 
 ### Simulate + Remediate (safe demos)
-Use the exact commands and captured outputs in:
+Each remediation doc has a **Reproduce (safe demo)** section with:
+- simulate misconfiguration
+- verify-before
+- fix
+- verify-after + cleanup
+
+Helper scripts (print commands by default):
+- `scripts/collect_evidence.ps1` / `scripts/collect_evidence.sh`
+- `scripts/simulate_findings.ps1` / `scripts/simulate_findings.sh`
+
+Start here:
 - `evidence/04-remediation-1-sg-open.md` (Security Hub control `EC2.18`)
-- `evidence/05-remediation-2-s3-public.md` (public S3 policy → blocked)
-- `evidence/06-remediation-3-iam-wildcards.md` (bad wildcard → least privilege)
+- `evidence/05-remediation-2-s3-public.md` (public S3 policy -> blocked)
+- `evidence/06-remediation-3-iam-wildcards.md` (bad wildcard -> least privilege; requires `create_bad_policy_example=true` once)
+
+Findings can take several minutes to appear/update in Security Hub; the demos include AWS-native before/after verification regardless.
 
 ### Destroy
 ```powershell
 cd terraform
 terraform destroy
 ```
+
+Optional (sandbox convenience): allow Terraform to delete non-empty log/config buckets during destroy:
+```powershell
+cd terraform
+terraform destroy -var="force_destroy_buckets=true"
+```
+
 If destroy fails because S3 buckets contain logs, empty the buckets from `terraform output` (`log_bucket_name`, `config_bucket_name`) and re-run destroy:
 ```powershell
-aws s3 rm s3://<bucket> --recursive
+aws s3 rm s3://<bucket> --recursive --no-cli-pager
 terraform destroy
 ```
 

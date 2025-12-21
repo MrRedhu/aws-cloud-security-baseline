@@ -18,3 +18,9 @@ crash.log
 
 # Evidence exports (optional; keep if you want them versioned)
 # evidence/raw/
+
+# Demo helper files (generated locally)
+filters-sg-ec2-18*.json
+filters-s3-this.json
+demo-public-bucket-policy.json
+trust-demo-role.json

@@ -25,6 +25,7 @@ aws iam get-policy-version --policy-arn <FIXED_POLICY_ARN> --version-id v1 --no-
 
 --- Step 4 (Logging) ---
 aws s3api get-public-access-block --bucket <LOG_BUCKET> --no-cli-pager
+aws s3api get-bucket-ownership-controls --bucket <LOG_BUCKET> --no-cli-pager
 aws s3api get-bucket-encryption --bucket <LOG_BUCKET> --no-cli-pager
 aws s3api get-bucket-versioning --bucket <LOG_BUCKET> --no-cli-pager
 aws s3api get-bucket-policy --bucket <LOG_BUCKET> --no-cli-pager
@@ -42,6 +43,11 @@ aws securityhub get-enabled-standards --no-cli-pager
 aws configservice describe-configuration-recorder-status --no-cli-pager
 aws configservice describe-configuration-recorders --no-cli-pager
 aws configservice describe-delivery-channels --no-cli-pager
+aws s3api get-public-access-block --bucket <CONFIG_BUCKET> --no-cli-pager
+aws s3api get-bucket-ownership-controls --bucket <CONFIG_BUCKET> --no-cli-pager
+aws s3api get-bucket-encryption --bucket <CONFIG_BUCKET> --no-cli-pager
+aws s3api get-bucket-versioning --bucket <CONFIG_BUCKET> --no-cli-pager
+aws s3api get-bucket-policy --bucket <CONFIG_BUCKET> --no-cli-pager
 
 --- Step 6/7 (Remediations) ---
 # SG demo (open SSH -> fixed): see evidence/04-remediation-1-sg-open.md
@@ -52,6 +58,7 @@ EOF
 if command -v terraform >/dev/null 2>&1 && [ -d "${TF_DIR}" ]; then
   if (cd "${TF_DIR}" && terraform output >/dev/null 2>&1); then
     LOG_BUCKET="$(cd "${TF_DIR}" && terraform output -raw log_bucket_name 2>/dev/null || true)"
+    CONFIG_BUCKET="$(cd "${TF_DIR}" && terraform output -raw config_bucket_name 2>/dev/null || true)"
     TRAIL_NAME="$(cd "${TF_DIR}" && terraform output -raw cloudtrail_name 2>/dev/null || true)"
     BAD_POLICY_ARN="$(cd "${TF_DIR}" && terraform output -raw bad_policy_arn 2>/dev/null || true)"
     FIXED_POLICY_ARN="$(cd "${TF_DIR}" && terraform output -raw fixed_policy_arn 2>/dev/null || true)"
@@ -60,6 +67,7 @@ if command -v terraform >/dev/null 2>&1 && [ -d "${TF_DIR}" ]; then
     echo
     echo "--- Resolved placeholders (from terraform output) ---"
     [ -n "${LOG_BUCKET}" ] && echo "LOG_BUCKET=${LOG_BUCKET}"
+    [ -n "${CONFIG_BUCKET}" ] && echo "CONFIG_BUCKET=${CONFIG_BUCKET}"
     [ -n "${TRAIL_NAME}" ] && echo "TRAIL_NAME=${TRAIL_NAME}"
     [ -n "${BAD_POLICY_ARN}" ] && echo "BAD_POLICY_ARN=${BAD_POLICY_ARN}"
     [ -n "${FIXED_POLICY_ARN}" ] && echo "FIXED_POLICY_ARN=${FIXED_POLICY_ARN}"

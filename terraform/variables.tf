@@ -27,3 +27,15 @@ variable "cw_log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "force_destroy_buckets" {
+  description = "If true, allow Terraform to delete non-empty S3 buckets (log/config archives) during destroy. Recommended only for sandbox teardowns."
+  type        = bool
+  default     = false
+}
+
+variable "create_bad_policy_example" {
+  description = "If true, create an intentionally bad wildcard IAM policy for demo/remediation evidence (not recommended for baseline deployments)."
+  type        = bool
+  default     = false
+}
