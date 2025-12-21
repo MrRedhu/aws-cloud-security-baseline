@@ -1,30 +1,33 @@
-# GuardDuty Triage Runbook (Template)
+# GuardDuty Triage Runbook
 
 ## Trigger
-- Example finding type:
-- Severity:
-- Affected account/region:
+- Example finding: `UnauthorizedAccess:IAMUser/ConsoleLogin` or Security Hub control `EC2.18` (open SSH)
+- Severity: Low/Medium/High
+- Account/Region: us-east-1 (or affected region)
 
-## Triage (first 5-10 minutes)
-- Confirm finding is real (not test/noise)
+## Triage (first 5–10 minutes)
+- Confirm the finding is not a sample/test and is still active
 - Identify impacted principal (user/role), resource, and timeframe
-- Check for related findings / unusual spikes
+- Check for correlated findings (same principal, IP, or resource)
+- Determine if data exfil or privilege escalation is possible
 
-## Containment (first 15-30 minutes)
-- Revoke/rotate credentials (if user or access keys)
-- Restrict network exposure (security groups / NACLs)
-- Isolate compute if needed (stop instance, detach from network, snapshot)
+## Containment (first 15–30 minutes)
+- Revoke or rotate credentials for impacted principal (access keys, sessions)
+- Restrict network exposure (tighten SG/NACL, block suspicious IPs)
+- Isolate affected compute if needed (stop instance, detach ENI, snapshot)
 
 ## Investigation
-- CloudTrail lookups (who did what, when)
-- CloudWatch Logs / VPC Flow Logs for supporting signals
-- Identify blast radius (what else this principal can access)
+- CloudTrail: who did what, when, from where (source IP, user agent)
+- GuardDuty finding details: evidence, action type, affected resources
+- CloudWatch Logs and VPC Flow Logs for supporting signals
+- Identify blast radius: policies, attached roles, reachable resources
 
 ## Remediation (fix root cause)
-- Tighten IAM policy / remove wildcards
-- Fix misconfig (S3 public access, SG open ingress, etc.)
-- Patch/rotate affected components
+- Remove overly permissive IAM policies and wildcards
+- Repair misconfigurations (S3 public access, SG open ingress, etc.)
+- Patch or rotate affected components (keys, tokens, instances)
 
 ## Prevention
-- Add guardrails (policy-as-code checks, Security Hub monitoring)
-- Update baseline modules to prevent recurrence
+- Add guardrails: SCPs/permission boundaries, policy-as-code checks
+- Enable/verify Security Hub controls and alerting
+- Update Terraform baseline modules to enforce safe defaults
