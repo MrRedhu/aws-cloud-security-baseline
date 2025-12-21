@@ -430,6 +430,20 @@ Prove that:
 }
 ```
 
+### Deletion proof (demo SG removed)
+`aws ec2 describe-security-groups --group-ids sg-02b31fdeef63dde30 --no-cli-pager`
+```
+An error occurred (InvalidGroup.NotFound) when calling the DescribeSecurityGroups operation: The security group 'sg-02b31fdeef63dde30' does not exist
+```
+
+### Post-remediation control status (PASSED)
+`aws securityhub get-findings --filters <ResourceId + ComplianceStatus PASSED> --no-cli-pager`
+```json
+{
+    "Findings": []
+}
+```
+
 ## GuardDuty sample findings (Security Hub ingestion check)
 `aws guardduty create-sample-findings --detector-id c2db5b53828d466d95f96fc901f93832 --no-cli-pager`
 
