@@ -1,0 +1,11 @@
+# Keep shell scripts runnable on *nix (avoid CRLF shebang issues)
+*.sh text eol=lf
+
+# Common repo formats
+*.tf text eol=lf
+*.tfvars text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.mmd text eol=lf
+Makefile text eol=lf
