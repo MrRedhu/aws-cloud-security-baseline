@@ -43,6 +43,8 @@ S3 buckets are a common data exposure vector. This remediation demonstrates dete
 }
 ```
 
+Control evaluation can take several minutes; this demo validates risk + fix via AWS-native policy status and BPA configuration.
+
 ## Remediation
 - Enabled Block Public Access at the bucket level
 - Removed the public bucket policy
@@ -63,6 +65,12 @@ S3 buckets are a common data exposure vector. This remediation demonstrates dete
 `aws s3api get-bucket-policy-status --bucket acs-baseline-demo-public-176087999560 --region us-east-1 --no-cli-pager`
 ```
 An error occurred (NoSuchBucketPolicy) when calling the GetBucketPolicyStatus operation: The bucket policy does not exist
+```
+
+## Cleanup proof
+`aws s3api head-bucket --bucket acs-baseline-demo-public-176087999560 --region us-east-1 --no-cli-pager`
+```
+An error occurred (404) when calling the HeadBucket operation: Not Found
 ```
 
 ## Prevention

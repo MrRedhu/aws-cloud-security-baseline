@@ -112,6 +112,12 @@ Detach the wildcard policy and attach the least-privilege policy.
 }
 ```
 
+## Cleanup proof
+`aws iam get-role --role-name acs-baseline-demo-bad-iam --no-cli-pager`
+```
+An error occurred (NoSuchEntity) when calling the GetRole operation: The role with name acs-baseline-demo-bad-iam cannot be found.
+```
+
 ## Prevention
 - Require review + CI checks (policy linting)
 - Deny IAM writes for developer personas (already included)
