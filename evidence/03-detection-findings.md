@@ -61,17 +61,17 @@ Prove that:
         {
             "Name": "CLOUD_TRAIL",
             "Status": "ENABLED",
-            "UpdatedAt": "2025-12-20T18:06:56-07:00"
+            "UpdatedAt": "2025-12-20T19:13:37-07:00"
         },
         {
             "Name": "DNS_LOGS",
             "Status": "ENABLED",
-            "UpdatedAt": "2025-12-20T18:06:56-07:00"
+            "UpdatedAt": "2025-12-20T19:13:37-07:00"
         },
         {
             "Name": "FLOW_LOGS",
             "Status": "ENABLED",
-            "UpdatedAt": "2025-12-20T18:06:56-07:00"
+            "UpdatedAt": "2025-12-20T19:13:37-07:00"
         },
         {
             "Name": "S3_DATA_EVENTS",
@@ -152,24 +152,11 @@ Prove that:
 {
     "StandardsSubscriptions": [
         {
-            "StandardsSubscriptionArn": "arn:aws:securityhub:us-east-1:176087999560:subscription/cis-aws-foundations-benchmark/v/1.2.0",
-            "StandardsArn": "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
-            "StandardsInput": {},
-            "StandardsStatus": "INCOMPLETE",
-            "StandardsControlsUpdatable": "READY_FOR_UPDATES",
-            "StandardsStatusReason": {
-                "StatusReasonCode": "NO_AVAILABLE_CONFIGURATION_RECORDER"
-            }
-        },
-        {
             "StandardsSubscriptionArn": "arn:aws:securityhub:us-east-1:176087999560:subscription/aws-foundational-security-best-practices/v/1.0.0",
             "StandardsArn": "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
             "StandardsInput": {},
-            "StandardsStatus": "INCOMPLETE",
-            "StandardsControlsUpdatable": "READY_FOR_UPDATES",
-            "StandardsStatusReason": {
-                "StatusReasonCode": "NO_AVAILABLE_CONFIGURATION_RECORDER"
-            }
+            "StandardsStatus": "READY",
+            "StandardsControlsUpdatable": "READY_FOR_UPDATES"
         }
     ]
 }
@@ -235,24 +222,23 @@ Prove that:
 
 `aws securityhub get-enabled-standards --query "StandardsSubscriptions[].{Arn:StandardsArn,Status:StandardsStatus,Reason:StandardsStatusReason.StatusReasonCode}" --output table --no-cli-pager`
 ```
-----------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                                GetEnabledStandards                                                               |
-+--------------------------------------------------------------------------------------------+---------------------------------------+-------------+
-|                                             Arn                                            |                Reason                 |   Status    |
-+--------------------------------------------------------------------------------------------+---------------------------------------+-------------+
-|  arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0                       |  NO_AVAILABLE_CONFIGURATION_RECORDER  |  INCOMPLETE |
-|  arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0 |  NO_AVAILABLE_CONFIGURATION_RECORDER  |  INCOMPLETE |
-+--------------------------------------------------------------------------------------------+---------------------------------------+-------------+
+---------------------------------------------------------------------------------------------------------
+|                                          GetEnabledStandards                                          |
++--------+----------------------------------------------------------------------------------------------+
+|  Arn   |  arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0   |
+|  Reason|  None                                                                                        |
+|  Status|  READY                                                                                       |
++--------+----------------------------------------------------------------------------------------------+
 ```
 
 ## Safe finding demo (open SSH)
 ### Simulation: open SSH to the world on a temporary security group
-`aws ec2 describe-security-groups --group-ids sg-0f28590b3317cd9e2 --no-cli-pager`
+`aws ec2 describe-security-groups --group-ids sg-02b31fdeef63dde30 --no-cli-pager`
 ```json
 {
     "SecurityGroups": [
         {
-            "GroupId": "sg-0f28590b3317cd9e2",
+            "GroupId": "sg-02b31fdeef63dde30",
             "IpPermissionsEgress": [
                 {
                     "IpProtocol": "-1",
@@ -267,7 +253,7 @@ Prove that:
                 }
             ],
             "VpcId": "vpc-035de9c63c12c4cc2",
-            "SecurityGroupArn": "arn:aws:ec2:us-east-1:176087999560:security-group/sg-0f28590b3317cd9e2",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:176087999560:security-group/sg-02b31fdeef63dde30",
             "OwnerId": "176087999560",
             "GroupName": "acs-baseline-demo-open-ssh",
             "Description": "Demo misconfig to generate Security Hub finding (temporary)",
@@ -294,17 +280,132 @@ Prove that:
 `aws securityhub get-findings --filters <ResourceId + ComplianceStatus FAILED> --no-cli-pager`
 ```json
 {
-    "Findings": []
+    "Findings": [
+        {
+            "SchemaVersion": "2018-10-08",
+            "Id": "arn:aws:securityhub:us-east-1:176087999560:security-control/EC2.18/finding/7c102ee7-d71a-4eef-b850-9f3d9bbccb32",
+            "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
+            "ProductName": "Security Hub",
+            "CompanyName": "AWS",
+            "Region": "us-east-1",
+            "GeneratorId": "security-control/EC2.18",
+            "AwsAccountId": "176087999560",
+            "Types": [
+                "Software and Configuration Checks/Industry and Regulatory Standards"
+            ],
+            "FirstObservedAt": "2025-12-21T02:14:54.242Z",
+            "LastObservedAt": "2025-12-21T02:14:54.242Z",
+            "CreatedAt": "2025-12-21T02:15:28.917Z",
+            "UpdatedAt": "2025-12-21T02:15:28.917Z",
+            "Severity": {
+                "Label": "HIGH",
+                "Normalized": 70,
+                "Original": "HIGH"
+            },
+            "Title": "Security groups should only allow unrestricted incoming traffic for authorized ports",
+            "Description": "This control checks whether an Amazon EC2 security group permits unrestricted incoming traffic from unauthorized ports. The control status is determined as follows: If you use the default value for 'authorizedTcpPorts', the control fails if the security group permits unrestricted incoming traffic from any port other than ports 80 and 443; If you provide custom values for 'authorizedTcpPorts' or 'authorizedUdpPorts', the control fails if the security group permits unrestricted incoming traffic from any unlisted port; If no parameter is used, the control fails for any security group that has an unrestricted inbound traffic rule.",
+            "Remediation": {
+                "Recommendation": {
+                    "Text": "For information on how to correct this issue, consult the AWS Security Hub controls documentation.",
+                    "Url": "https://docs.aws.amazon.com/console/securityhub/EC2.18/remediation"
+                }
+            },
+            "ProductFields": {
+                "RelatedAWSResources:0/name": "securityhub-vpc-sg-open-only-to-authorized-ports-20a6a216",
+                "RelatedAWSResources:0/type": "AWS::Config::ConfigRule",
+                "aws/securityhub/ProductName": "Security Hub",
+                "aws/securityhub/CompanyName": "AWS",
+                "aws/securityhub/annotation": "No tcp ['22'] port is authorized to be open, according to authorizedTcpPorts values ['80,443'] parameter.",
+                "Resources:0/Id": "arn:aws:ec2:us-east-1:176087999560:security-group/sg-02b31fdeef63dde30",
+                "aws/securityhub/FindingId": "arn:aws:securityhub:us-east-1::product/aws/securityhub/arn:aws:securityhub:us-east-1:176087999560:security-control/EC2.18/finding/7c102ee7-d71a-4eef-b850-9f3d9bbccb32"
+            },
+            "Resources": [
+                {
+                    "Type": "AwsEc2SecurityGroup",
+                    "Id": "arn:aws:ec2:us-east-1:176087999560:security-group/sg-02b31fdeef63dde30",
+                    "Partition": "aws",
+                    "Region": "us-east-1",
+                    "Details": {
+                        "AwsEc2SecurityGroup": {
+                            "GroupName": "acs-baseline-demo-open-ssh",
+                            "GroupId": "sg-02b31fdeef63dde30",
+                            "OwnerId": "176087999560",
+                            "VpcId": "vpc-035de9c63c12c4cc2",
+                            "IpPermissions": [
+                                {
+                                    "IpProtocol": "tcp",
+                                    "FromPort": 22,
+                                    "ToPort": 22,
+                                    "IpRanges": [
+                                        {
+                                            "CidrIp": "0.0.0.0/0"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "IpPermissionsEgress": [
+                                {
+                                    "IpProtocol": "-1",
+                                    "IpRanges": [
+                                        {
+                                            "CidrIp": "0.0.0.0/0"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            "Compliance": {
+                "Status": "FAILED",
+                "SecurityControlId": "EC2.18",
+                "AssociatedStandards": [
+                    {
+                        "StandardsId": "standards/aws-foundational-security-best-practices/v/1.0.0"
+                    }
+                ],
+                "SecurityControlParameters": [
+                    {
+                        "Name": "authorizedUdpPorts",
+                        "Value": []
+                    },
+                    {
+                        "Name": "authorizedTcpPorts",
+                        "Value": [
+                            "80",
+                            "443"
+                        ]
+                    }
+                ]
+            },
+            "WorkflowState": "NEW",
+            "Workflow": {
+                "Status": "NEW"
+            },
+            "RecordState": "ACTIVE",
+            "FindingProviderFields": {
+                "Severity": {
+                    "Label": "HIGH",
+                    "Original": "HIGH"
+                },
+                "Types": [
+                    "Software and Configuration Checks/Industry and Regulatory Standards"
+                ]
+            },
+            "ProcessedAt": "2025-12-21T02:15:33.885Z"
+        }
+    ]
 }
 ```
 
 ### Remediation (remove open ingress)
-`aws ec2 describe-security-groups --group-ids sg-0f28590b3317cd9e2 --no-cli-pager`
+`aws ec2 describe-security-groups --group-ids sg-02b31fdeef63dde30 --no-cli-pager`
 ```json
 {
     "SecurityGroups": [
         {
-            "GroupId": "sg-0f28590b3317cd9e2",
+            "GroupId": "sg-02b31fdeef63dde30",
             "IpPermissionsEgress": [
                 {
                     "IpProtocol": "-1",
@@ -319,7 +420,7 @@ Prove that:
                 }
             ],
             "VpcId": "vpc-035de9c63c12c4cc2",
-            "SecurityGroupArn": "arn:aws:ec2:us-east-1:176087999560:security-group/sg-0f28590b3317cd9e2",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:176087999560:security-group/sg-02b31fdeef63dde30",
             "OwnerId": "176087999560",
             "GroupName": "acs-baseline-demo-open-ssh",
             "Description": "Demo misconfig to generate Security Hub finding (temporary)",
@@ -329,129 +430,58 @@ Prove that:
 }
 ```
 
-## GuardDuty sample findings (fallback evidence)
+## GuardDuty sample findings (Security Hub ingestion check)
 `aws guardduty create-sample-findings --detector-id c2db5b53828d466d95f96fc901f93832 --no-cli-pager`
 
 `aws securityhub get-findings --filters <ProductName GuardDuty> --no-cli-pager`
 ```json
-{
-    "Findings": [
-        {
-            "SchemaVersion": "2018-10-08",
-            "Id": "arn:aws:guardduty:us-east-1:176087999560:detector/c2db5b53828d466d95f96fc901f93832/finding/aecd9f3bf3543645c3154b30f2661c3a",
-            "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/guardduty",
-            "ProductName": "GuardDuty",
-            "CompanyName": "Amazon",
-            "Region": "us-east-1",
-            "GeneratorId": "arn:aws:guardduty:us-east-1:176087999560:detector/c2db5b53828d466d95f96fc901f93832",
-            "AwsAccountId": "176087999560",
-            "Types": [
-                "TTPs/Policy:IAMUser-RootCredentialUsage"
-            ],
-            "FirstObservedAt": "2025-12-21T01:06:24.000Z",
-            "LastObservedAt": "2025-12-21T01:07:40.000Z",
-            "CreatedAt": "2025-12-21T01:13:23.880Z",
-            "UpdatedAt": "2025-12-21T01:13:23.880Z",
-            "Severity": {
-                "Product": 2.0,
-                "Label": "LOW",
-                "Normalized": 40
-            },
-            "Title": "The API GetDetector was invoked using root credentials.",
-            "Description": "The API GetDetector was invoked using root credentials from IP address 24.251.38.91.",
-            "SourceUrl": "https://us-east-1.console.aws.amazon.com/guardduty/home?region=us-east-1#/findings?macros=current&fId=aecd9f3bf3543645c3154b30f2661c3a",
-            "ProductFields": {
-                "aws/guardduty/service/archived": "false",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/organization/asnOrg": "ASN-CXA-ALL-CCI-22773-RDC",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/organization/org": "Cox Communications",
-                "aws/guardduty/service/additionalInfo/value": "",
-                "aws/guardduty/service/resourceRole": "TARGET",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/organization/isp": "Cox Communications",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/geoLocation/lat": "33.3124",
-                "aws/guardduty/service/featureName": "CloudTrailManagementEvent",
-                "aws/guardduty/service/count": "18",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/ipAddressV4": "24.251.38.91",
-                "aws/guardduty/service/action/awsApiCallAction/callerType": "Remote IP",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/country/countryName": "United States",
-                "aws/guardduty/service/action/awsApiCallAction/serviceName": "guardduty.amazonaws.com",
-                "aws/guardduty/service/additionalInfo/type": "default",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/city/cityName": "Chandler",
-                "aws/guardduty/service/action/awsApiCallAction/api": "GetDetector",
-                "aws/guardduty/service/serviceName": "guardduty",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/geoLocation/lon": "-111.9195",
-                "aws/guardduty/service/detectorId": "c2db5b53828d466d95f96fc901f93832",
-                "aws/guardduty/service/action/awsApiCallAction/remoteIpDetails/organization/asn": "22773",
-                "aws/guardduty/service/action/awsApiCallAction/affectedResources": "",
-                "aws/guardduty/service/eventFirstSeen": "2025-12-21T01:06:24.000Z",
-                "aws/guardduty/service/eventLastSeen": "2025-12-21T01:07:40.000Z",
-                "aws/guardduty/service/action/actionType": "AWS_API_CALL",
-                "aws/securityhub/FindingId": "arn:aws:securityhub:us-east-1::product/aws/guardduty/arn:aws:guardduty:us-east-1:176087999560:detector/c2db5b53828d466d95f96fc901f93832/finding/aecd9f3bf3543645c3154b30f2661c3a",
-                "aws/securityhub/ProductName": "GuardDuty",
-                "aws/securityhub/CompanyName": "Amazon"
-            },
-            "Resources": [
-                {
-                    "Type": "AwsIamAccessKey",
-                    "Id": "AWS::IAM::AccessKey:ASIASR75JUREFGK6G3JJ",
-                    "Partition": "aws",
-                    "Region": "us-east-1",
-                    "Details": {
-                        "AwsIamAccessKey": {
-                            "PrincipalId": "176087999560",
-                            "PrincipalType": "Root",
-                            "PrincipalName": "Root"
-                        }
-                    }
-                }
-            ],
-            "WorkflowState": "NEW",
-            "Workflow": {
-                "Status": "NEW"
-            },
-            "RecordState": "ACTIVE",
-            "Action": {
-                "ActionType": "AWS_API_CALL",
-                "AwsApiCallAction": {
-                    "Api": "GetDetector",
-                    "ServiceName": "guardduty.amazonaws.com",
-                    "CallerType": "remoteIp",
-                    "RemoteIpDetails": {
-                        "IpAddressV4": "24.251.38.91",
-                        "Organization": {
-                            "Asn": 22773,
-                            "AsnOrg": "ASN-CXA-ALL-CCI-22773-RDC",
-                            "Isp": "Cox Communications",
-                            "Org": "Cox Communications"
-                        },
-                        "Country": {
-                            "CountryCode": "US",
-                            "CountryName": "United States"
-                        },
-                        "City": {
-                            "CityName": "Chandler"
-                        },
-                        "GeoLocation": {
-                            "Lon": -111.9195,
-                            "Lat": 33.3124
-                        }
-                    }
-                }
-            },
-            "FindingProviderFields": {
-                "Severity": {
-                    "Label": "LOW"
+[
+    {
+        "Id": "arn:aws:guardduty:us-east-1:176087999560:detector/c2db5b53828d466d95f96fc901f93832/finding/de030c3042f7478990890903bcf22039",
+        "Title": "A container has mounted a host directory.",
+        "Severity": "MEDIUM",
+        "ProductName": "GuardDuty",
+        "Types": [
+            "TTPs/Privilege Escalation/PrivilegeEscalation:Runtime-ContainerMountsHostDirectory"
+        ],
+        "Sample": true,
+        "Resources": [
+            {
+                "Type": "AwsEc2Instance",
+                "Id": "arn:aws:ec2:us-east-1:176087999560:instance/i-99999999",
+                "Partition": "aws",
+                "Region": "us-east-1",
+                "Tags": {
+                    "GeneratedFindingInstanceTag1": "GeneratedFindingInstanceValue1",
+                    "GeneratedFindingInstanceTag2": "GeneratedFindingInstanceTagValue2",
+                    "GeneratedFindingInstanceTag3": "GeneratedFindingInstanceTagValue3",
+                    "GeneratedFindingInstanceTag4": "GeneratedFindingInstanceTagValue4",
+                    "GeneratedFindingInstanceTag5": "GeneratedFindingInstanceTagValue5",
+                    "GeneratedFindingInstanceTag6": "GeneratedFindingInstanceTagValue6",
+                    "GeneratedFindingInstanceTag7": "GeneratedFindingInstanceTagValue7",
+                    "GeneratedFindingInstanceTag8": "GeneratedFindingInstanceTagValue8",
+                    "GeneratedFindingInstanceTag9": "GeneratedFindingInstanceTagValue9"
                 },
-                "Types": [
-                    "TTPs/Policy:IAMUser-RootCredentialUsage"
-                ]
-            },
-            "Sample": false,
-            "ProcessedAt": "2025-12-21T01:15:04.345Z"
-        }
-    ]
-}
+                "Details": {
+                    "AwsEc2Instance": {
+                        "Type": "m3.xlarge",
+                        "ImageId": "ami-99999999",
+                        "IpV4Addresses": [
+                            "10.0.0.1",
+                            "198.51.100.0"
+                        ],
+                        "IamInstanceProfileArn": "arn:aws:iam::012345678999:instance-profile/generated",
+                        "VpcId": "vpc-generatedvpcid",
+                        "SubnetId": "GeneratedFindingSubnetId",
+                        "LaunchedAt": "2016-08-02T02:05:06.000Z"
+                    }
+                }
+            }
+        ]
+    }
+]
 ```
 
 ## Notes
-- AWS Config is enabled, but Security Hub standards may take time to update from NO_AVAILABLE_CONFIGURATION_RECORDER.
+- Security Hub standards are READY after AWS Config is enabled.
 - The demo security group was deleted after remediation.

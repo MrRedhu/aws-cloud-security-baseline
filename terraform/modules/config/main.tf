@@ -24,17 +24,13 @@ resource "aws_s3_bucket_public_access_block" "config_archive" {
 
 resource "aws_s3_bucket_versioning" "config_archive" {
   bucket = aws_s3_bucket.config_archive.id
-  versioning_configuration {
-    status = "Enabled"
-  }
+  versioning_configuration { status = "Enabled" }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "config_archive" {
   bucket = aws_s3_bucket.config_archive.id
   rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
+    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
   }
 }
 
