@@ -6,14 +6,14 @@ flowchart TB
   end
 
   subgraph Logging["Logging (Centralized + Retention + Hardened Storage)"]
-    CT[CloudTrail] --> CWL[CloudWatch Logs\n(retention set)]
+    CT[CloudTrail] --> CWL[CloudWatch Logs<br/>(retention set)]
     VPC[VPC Flow Logs] --> CWL
     CT --> S3[(Central Log Bucket)]
     CWL --> S3
-    S3 --> Hardened[Hardened Storage\nBlock Public Access + Encryption + Versioning]
+    S3 --> Hardened[Hardened Storage<br/>Block Public Access + Encryption + Versioning]
   end
 
   subgraph Detection["Detection (Signals + Findings)"]
     GD[GuardDuty] --> SH[Security Hub]
-    SH --> Findings[Findings\n(JSON + screenshots as evidence)]
+    SH --> Findings[Findings<br/>(JSON + screenshots as evidence)]
   end
