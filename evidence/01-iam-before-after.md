@@ -6,7 +6,7 @@ Demonstrate least-privilege IAM design for three personas and show an explicit b
 ## Personas implemented
 - Admin: full access (baseline admin role)
 - Developer: limited access (will be tightened further as resource ARNs exist)
-- Read-only: AWS managed ReadOnlyAccess baseline
+- Read-only: AWS managed read-only baseline
 
 ## BEFORE (intentionally bad)
 **What was wrong:** Developer role had an attached policy that allowed `Action="*"` and `Resource="*"`.
