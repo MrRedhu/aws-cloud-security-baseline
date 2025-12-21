@@ -45,3 +45,11 @@ output "guardduty_detector_id" {
 output "securityhub_enabled" {
   value = module.detection.securityhub_enabled
 }
+
+output "config_bucket_name" {
+  value = module.config.config_bucket_name
+}
+
+output "config_recorder_name" {
+  value = module.config.config_recorder_name
+}

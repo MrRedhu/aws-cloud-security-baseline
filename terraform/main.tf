@@ -9,6 +9,11 @@ module "logging" {
   cw_log_retention_days = var.cw_log_retention_days
 }
 
+module "config" {
+  source      = "./modules/config"
+  name_prefix = var.name_prefix
+}
+
 module "detection" {
   source      = "./modules/detection"
   name_prefix = var.name_prefix
