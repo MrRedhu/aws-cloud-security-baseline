@@ -37,3 +37,11 @@ output "vpc_flow_log_group" {
 output "flowlogs_vpc_id" {
   value = module.logging.flowlogs_vpc_id
 }
+
+output "guardduty_detector_id" {
+  value = module.detection.guardduty_detector_id
+}
+
+output "securityhub_enabled" {
+  value = module.detection.securityhub_enabled
+}
