@@ -4,7 +4,7 @@ data "aws_region" "current" {}
 locals {
   config_bucket_name           = lower("${var.name_prefix}-${data.aws_caller_identity.current.account_id}-config-archive")
   config_delivery_channel_name = "${var.name_prefix}-config-delivery"
-  config_delivery_channel_arn  = "arn:aws:config:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:delivery-channel/${local.config_delivery_channel_name}"
+  config_source_arn_prefix     = "arn:aws:config:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:*"
 }
 
 # Service-linked role for AWS Config
@@ -60,8 +60,10 @@ resource "aws_s3_bucket_policy" "config_write" {
         Resource  = aws_s3_bucket.config_archive.arn
         Condition = {
           StringEquals = {
-            "aws:SourceArn"     = local.config_delivery_channel_arn,
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = local.config_source_arn_prefix
           }
         }
       },
@@ -74,8 +76,10 @@ resource "aws_s3_bucket_policy" "config_write" {
         Condition = {
           StringEquals = {
             "s3:x-amz-acl"      = "bucket-owner-full-control",
-            "aws:SourceArn"     = local.config_delivery_channel_arn,
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = local.config_source_arn_prefix
           }
         }
       },

@@ -50,6 +50,8 @@ Prove that logging is:
 }
 ```
 
+Note: The bucket policy JSON above was captured before the latest Terraform hardening. After applying the current Terraform, re-run `aws s3api get-bucket-policy` to capture the updated policy (should include `aws:SourceArn`, `aws:SourceAccount`, and `DenyInsecureTransport`).
+
 ### Additional hardening checks (re-run after next `terraform apply`)
 The Terraform baseline now also sets S3 ownership controls and tightens the bucket policy (confused-deputy protection + HTTPS-only). Re-run and paste:
 - `aws s3api get-bucket-ownership-controls --bucket <LOG_BUCKET> --no-cli-pager`
