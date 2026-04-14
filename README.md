@@ -67,6 +67,18 @@ flowchart TB
 - Remediation 2 (S3 public access): `evidence/05-remediation-2-s3-public.md`
 - Remediation 3 (IAM wildcard): `evidence/06-remediation-3-iam-wildcards.md`
 
+## What I built
+- Terraform modules and resource wiring for IAM personas, CloudTrail, VPC Flow Logs, CloudWatch retention, S3 hardening, GuardDuty, Security Hub, and AWS Config
+- Reproducible evidence workflow for before-and-after control states instead of a one-time lab screenshot
+- Safe remediation walkthroughs that show how findings appear, how to verify them, and how to return the environment to a good state
+- A short GuardDuty triage runbook so the repo reads like an operational security baseline rather than only an infrastructure demo
+
+## Lessons learned
+- Security tooling becomes much more credible when the repo shows validation and remediation, not just service enablement
+- AWS Config is easy to overlook, but it is a real dependency for useful Security Hub control coverage
+- A strong cloud-security project needs both preventive controls and operator-friendly evidence collection
+- Publishing cloud work safely means documenting guardrails, costs, and cleanup paths alongside the happy path
+
 ## Reproduce (deploy -> simulate -> remediate -> destroy)
 ### Prereqs
 - Terraform `>= 1.5`
